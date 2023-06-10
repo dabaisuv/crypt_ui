@@ -4,6 +4,7 @@ import 'package:crypt_ui/src/crypt_file/crypt_file.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:io' if (dart.library.html) '';
 
 class CryptFileForm extends StatelessWidget {
   const CryptFileForm({super.key});
@@ -37,11 +38,21 @@ class FilePickerButton extends StatelessWidget {
       child: ElevatedButton.icon(
           onPressed: () async {
             FilePickerResult? result = await FilePicker.platform.pickFiles();
+
             if (result != null) {
-              Uint8List fileBytes = result.files.first.bytes!;
-              String fileName = result.files.first.name;
-              context.read<CryptFileBloc>().add(CryptFilePickedFile(
-                  fileBytes: fileBytes, fileName: fileName));
+              print(Theme.of(context).platform);
+              if (Theme.of(context).platform == TargetPlatform.windows) {
+                File file = File(result.files.single.path!);
+                Uint8List fileBytes = file.readAsBytesSync();
+                String fileName = result.files.single.name;
+                context.read<CryptFileBloc>().add(CryptFilePickedFile(
+                    fileBytes: fileBytes, fileName: fileName));
+              } else {
+                Uint8List fileBytes = result.files.first.bytes!;
+                String fileName = result.files.first.name;
+                context.read<CryptFileBloc>().add(CryptFilePickedFile(
+                    fileBytes: fileBytes, fileName: fileName));
+              }
             }
           },
           icon: const Icon(
